@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int       @id @default(autoincrement())
+  client   String    @unique
+  sessions Session[]
+  order    Order[]
+
+  @@map("users")
+}
+
+model Session {
+  id       Int      @id @default(autoincrement())
+  userId   Int      @map("user_id")
+  stage    Int
+  time     DateTime @default(now())
+  isActive Int      @map("is_active")
+  User     User?    @relation(fields: [userId], references: [id])
+  order    Order[]
+
+  @@map("sessions")
+}
+
+model Order {
+  id        Int              @id @default(autoincrement())
+  sessionId Int              @map("session_id")
+  userId    Int              @map("user_id")
+  isActive  Int              @map("is_active")
+  User      User             @relation(fields: [userId], references: [id])
+  Session   Session          @relation(fields: [sessionId], references: [id])
+  products  OrdersProducts[]
+
+  @@map("orders")
+}
+
+model OrdersProducts {
+  id        Int     @id @default(autoincrement())
+  productId Int     @map("product_id")
+  orderId   Int     @map("order_id")
+  price     Decimal
+  quantity  Decimal
+  Order     Order   @relation(fields: [orderId], references: [id])
+  Product   Product @relation(fields: [productId], references: [id])
+
+  @@map("order_products")
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id         Int              @id @default(autoincrement())
+  name       String
+  price      Decimal
+  categoryId Int?             @map("category_id")
+  Category   Category?        @relation(fields: [categoryId], references: [id])
+  orders     OrdersProducts[]
+
+  @@map("products")
+}
